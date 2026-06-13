@@ -1,9 +1,10 @@
-***My personal learning journey through Python, PyTorch, and Mathematics. Dive into my notes and track my progress through the commit history!***
+***My personal learning journey through Python, PyTorch, and Mathematics. Dive into my notes and track my progress through the commit history!*** (https://lightning.ai/docs/pytorch/stable/notebooks/course_UvA-DL/01-introduction-to-pytorch.html)
 # **Тензоры**
-==**Тензоры**== - *это массивы (похож на массивы из NumPy), делящиеся на типы:*
-1. **0-мерный** - *это в аналогии 0d (точка) - то есть массив состоящий из одного числа/скаляр, пример: 3; 4; 12 312. (все они не зависимы от друга)*
-2. **1-мерный** - *это как 1d (абсцисс / ось x) - то есть массив состоящий из чисел, которые идут слева на право, вектор (аналог простого списка в Py), пример:* [1, 2, 3, 11].
-3. **2-мерный** - *это как 2d  (абсцисс и ординат / ось x и y) - то есть массив состоящий из чисел, которые аналогична таблице из строк и столбцов (матрица), пример:* 
+==**Тензоры**== - это массивы (похож на массивы из NumPy), делящиеся на типы:
+
+-  **0-мерный** - *это в аналогии 0d (точка) - то есть массив состоящий из одного числа/скаляр, пример: 3; 4; 12 312. (все они не зависимы от друга)*
+- **1-мерный** - *это как 1d (абсцисс / ось x) - то есть массив состоящий из чисел, которые идут слева на право, вектор (аналог простого списка в Py), пример:* [1, 2, 3, 11].
+-  **2-мерный** - *это как 2d  (абсцисс и ординат / ось x и y) - то есть массив состоящий из чисел, которые аналогична таблице из строк и столбцов (матрица), пример:* 
    $\begin{pmatrix} 1 & 2 \\ 3 & 4 \end{pmatrix}$
 ```Python
    [
@@ -13,7 +14,7 @@
    ]
 ```
    [ [ 1,2 ] [ 3, 4 ] ]
-4. **3-мерный** - *это как 3d (ось x, y и z) - то есть массив состоящий из чисел, как бы это массив в массиве в массиве*: 
+- **3-мерный** - *это как 3d (ось x, y и z) - то есть массив состоящий из чисел, как бы это массив в массиве в массиве*: 
    
    [ [ [ числа 1 мерный массив ], [ числа 1 мерный массив  ] ], 
    [ [ числа 1 мерный массив ], [ числа 1 мерный массив ] ] ] 
@@ -31,23 +32,36 @@
     ]
  ])
 ```
-5. **4-мерный тензор (4D)** - *можно представить как линию, состоящую из 3D-кубиков. Хорошая аналогия - это обычная книжная полка, на которой в один ряд стоят "трехмерные" книги.*
+-  **4-мерный тензор (4D)** - *можно представить как линию, состоящую из 3D-кубиков. Хорошая аналогия - это обычная книжная полка, на которой в один ряд стоят "трехмерные" книги.*
     Чтобы найти конкретное число в таком массиве, понадобятся четыре координаты:
     [номер книги на полке, страница в этой книге, строка на странице, список из символов (слово)]. 
 		слово здесь как векторный массив => привет = [п, р, и, в, е, т]
 		то есть список из символов
 	
     В сфере искусственного интеллекта 4D-тензоры используются постоянно, например, для передачи пакета (батча) из нескольких цветных картинок в нейросеть.
-	пример обычного 4-ох мерного тезора:[ [ [ [1, 2, 3 ] ], [ [5, 6, 7] ], [ [2, 4, 6] ] ] ] ] -> его размер (1, 3, 1, 3)
+	пример обычного 4-ох мерного тезора: [ [ [ [1, 2, 3 ] ], [ [5, 6, 7] ], [ [2, 4, 6] ] ] ] ] -> его размер (1, 3, 1, 3)
+	
+```Python
+mytensor = torch.ones(1, 3, 1, 3)  
+print(mytensor)
+```
+**Вывод:**
+```
+tensor([[[[1., 1., 1.]],
+
+         [[1., 1., 1.]],
+
+         [[1., 1., 1.]]]])
+```
 	
 	
-	**5-мерный тензор (5D)** - *это уже целая плоская таблица, состоящая из 3D-кубиков. В жизни это напоминает большой книжный шкаф, где книги распределены не в один ряд, а стоят на разных полках (высота) и в разных секциях (ширина).*
+- **5-мерный тензор (5D)** - *это уже целая плоская таблица, состоящая из 3D-кубиков. В жизни это напоминает большой книжный шкаф, где книги распределены не в один ряд, а стоят на разных полках (высота) и в разных секциях (ширина).*
 	 Здесь для поиска нужного элемента требуется пять координат: 
 	 [номер полки, номер книги на этой полке, страница, список из символов].
 	 
 	В искусственном интеллекте в виде 5D-тензоров обычно хранятся пакеты видеороликов, где осями выступают количество видео, кадры во времени, цвет, высота и ширина кадра.
 
-	**6-мерный тензор (6D)** *представляет собой огромный трехмерный супер-куб, собранный из маленьких 3D-кубиков. Ближайшая аналогия из реального мира - это целая библиотека со множеством комнат и шкафов.*
+- **6-мерный тензор (6D)** *представляет собой огромный трехмерный супер-куб, собранный из маленьких 3D-кубиков. Ближайшая аналогия из реального мира - это целая библиотека со множеством комнат и шкафов.*
 	 В данном случае система координат разрастается до шести значений: 
 	 [номер ряда шкафов, номер конкретного шкафа в этом ряду, номер полки, номер книги, страница, список из символов]
 ![[simple tutorial on tensors.jpg]]
@@ -174,6 +188,7 @@ print(x.requires_grad)  # Выведет: True
   `end` (докуда идти, **не включая** это число),
   `step` (шаг))
   -создает тензор, содержащий значения 
+
 ---
 - `torch.Tensor` (список входных данных 
   `Tensor( размер первого массива, второго, и т.п.)`): создает тензор из указанных вами элементов списка
@@ -688,7 +703,11 @@ print(f"Градиенты = {x.grad}")    # Выведет: tensor([4., 6.])
 
 #### Метод **`.backward()`**
 
-**`.backward()`** - *это кнопка запуска автоматического расчета производных (градиентов) по всему пройденному пути вычислений.*
+$$
+\frac{\partial L}{\partial w}
+$$
+
+**`.backward()`** - это кнопка (метод) запуска автоматического расчета производных (градиентов) по всему пройденному пути вычислений.
 #### with torch.no_grad()
 
 with torch.no_grad() - убирает всю отслежу градиентов внутри самого вызова
@@ -698,11 +717,7 @@ with torch.no_grad():
 	# Внутри этого блока тумблер requires_grad временно блокируется для ВСЕХ     тензоров
 	result = x * 2
 ```
-## **Параметры нейросети** и *работа ИИ*
-
-**Классификация** *(когда ИИ выбирает категорию, например: «кошка» или «собака»).*
-**Регрессия** *(когда ИИ должен предсказать конкретное непрерывное число - цену квартиры, температуру, курс доллара).*
-
+## **Параметры нейросети** и пример xor
 [[Перцептрон]] / Перцептрон.md (чек)
 ### фичи и батчи
 **фичи** ($X$) - *это входные данные для нейросети, из которых мы хотим получить итоговый результат.*
@@ -738,7 +753,20 @@ $$Y = f(X)$$
 - Точки $(0,0)$ и $(1,1)$  синие (результат `0`).
 
 - Точки $(1,0)$ и $(0,1)$  оранжевые (результат `1`).
-### **Параметры нейросети**
+# **Обучение + Работа нейронов**
+1. Получите пакет данных из загрузчика
+    
+2. Получите прогнозы модели для пакета
+    
+3. Рассчитайте потери на основе разницы между прогнозами и метками
+    
+4. Обратное распространение: рассчитайте градиенты для каждого параметра в зависимости от потерь
+    
+5. Обновите параметры модели в соответствии с градиентами
+
+**Классификация** *(когда ИИ выбирает категорию, например: «кошка» или «собака»).*
+**Регрессия** *(когда ИИ должен предсказать конкретное непрерывное число - цену квартиры, температуру, курс доллара).*
+### **Параметры нейросети** (еще)
 
 ==**Входные данные**== *(Inputs / $X$)* - *вектор или тензор признаков (features), представляющий собой закодированную в цифровой вид информацию, которая подается на первый (входной) слой нейронной сети для последующих линейных и нелинейных преобразований.*
 
@@ -776,12 +804,9 @@ $$k = \frac{1}{\sqrt{\text{ВХОДЫ}}}$$
 
 ***Сколько признаков подаётся на вход слоя?*** -> *Столько же весов будет сидеть внутри каждого нейрона.*
 
-
-# **Обучение на примере: непрерывное исключающее ИЛИ**
-
 ## Функции активации
 
-==**Функции активации**== - *это математический компонент искусственного нейрона, который определяет, передавать ли полученный сигнал дальше по сети.*
+==**Функции активации**== - это математический компонент искусственного нейрона, который определяет, передавать ли полученный сигнал дальше по сети.
 Нужна она по одной важнейшей причине:
 - нелинейность - ибо без нее это обычная прямая, одна из причин почему после [[Перцептрон |перцептрона]] было затишье, это тупо невозможность решить XOR задачи и т.п. 
 ###### 1. Когда нужно строго от 0 до 1 (Меньше или равно 1) — `Sigmoid`
@@ -790,13 +815,13 @@ $$k = \frac{1}{\sqrt{\text{ВХОДЫ}}}$$
 
 - **Зачем:** Идеально подходит для финального слоя, когда сеть должна выдать вероятность. Например: _"С вероятностью 0.87 (87%) на этой картинке кот"_.
     
-###### 2. Когда нужно от -1 до 1 — `Tanh` (Гиперболический тангенс)
+###### 2. Когда нужно от -1 до 1 - `Tanh` (Гиперболический тангенс)
 
 Похожа на сигмоиду, но сжимает данные в диапазон **от -1 до 1**.
 
 - **Зачем:** Часто используется во внутренних слоях, потому что когда среднее значение выходов близко к нулю, нейросеть обучается быстрее и стабильнее.
     
-###### 3. Когда значение может быть ГОРАЗДО БОЛЬШЕ 1 — `ReLU`
+###### 3. Когда значение может быть ГОРАЗДО БОЛЬШЕ 1 - `ReLU`
 
 Это самая популярная функция активации в современных нейросетях. Её логика гениально проста: если на вход пришло отрицательное число, она превращает его в $0$. Если пришло положительное — она **пропускает его как есть, вообще не изменяя**.
 - **Значение:** Если нейрону пришло число $150$, на выходе будет $150$ (что намного больше 1).
@@ -838,7 +863,14 @@ relu = nn.ReLU() # Создали объект класса ReLU
 
 **Главное ограничение:** *Умеет делать только прямые линии или плоские поверхности. Он геометрически «слеп» к сложным изгибам. Чтобы сеть могла решать нелинейные задачи (вроде XOR), сразу после `nn.Linear` обязательно нужно вызывать функцию активации (например, `F.relu`).*
 ### `nn.Module`
-основные методы `__init__ `
+используем для создание модели (наследуем от данного класса) 
+основные методы (функции) `__init__ ` `forward(x)`
+
+*В `__init__` мы обязательно вызываем `super().__init__()` и объявляем слои* (например, линейный слой `nn.Linear`).
+
+--- 
+`forward(x)`
+*В методе `forward(x)` мы прописываем, как входные данные `x` идут сквозь эти слои до самого выхода.*
 #### Dataset
 
 `Dataset` *отвечает за **доступ к единичному элементу** данных. Это абстракция над физическим хранилищем (файлом, массивом).*
@@ -917,3 +949,210 @@ class MyDataset(data.Dataset):
 - `num_workers`: Сколько параллельных процессов процессора будут загружать данные. Для маленьких данных (как этот XOR) всегда ставим `0`. Для тяжелых картинок ставим `4` или больше.
 
 - `drop_last=True`: Если у тебя 203 картинки, а `batch_size=10`, то в конце останется «хвостик» из 3 картинок. Этот флаг просто выкидывает этот неполный хвостик, чтобы размер батчей всегда был одинаковым.
+## Функция потерь
+|                                                                                                                                                                                                                |                                                                                                                                                                                                                                                                                                                                                                                     |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`nn.L1Loss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.L1Loss.html#torch.nn.L1Loss "torch.nn.L1Loss")                                                                                             | Creates a criterion that measures the mean absolute error (MAE) between each element in the input xx and target yy.                                                                                                                                                                                                                                                                 |
+| [`nn.MSELoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.MSELoss.html#torch.nn.MSELoss "torch.nn.MSELoss")                                                                                         | Creates a criterion that measures the mean squared error (squared L2 norm) between each element in the input xx and target yy.                                                                                                                                                                                                                                                      |
+| [`nn.CrossEntropyLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.CrossEntropyLoss.html#torch.nn.CrossEntropyLoss "torch.nn.CrossEntropyLoss")                                                     | This criterion computes the cross entropy loss between input logits and target.                                                                                                                                                                                                                                                                                                     |
+| [`nn.CTCLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.CTCLoss.html#torch.nn.CTCLoss "torch.nn.CTCLoss")                                                                                         | The Connectionist Temporal Classification loss.                                                                                                                                                                                                                                                                                                                                     |
+| [`nn.NLLLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.NLLLoss.html#torch.nn.NLLLoss "torch.nn.NLLLoss")                                                                                         | The negative log likelihood loss.                                                                                                                                                                                                                                                                                                                                                   |
+| [`nn.PoissonNLLLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.PoissonNLLLoss.html#torch.nn.PoissonNLLLoss "torch.nn.PoissonNLLLoss")                                                             | Negative log likelihood loss with Poisson distribution of target.                                                                                                                                                                                                                                                                                                                   |
+| [`nn.GaussianNLLLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.GaussianNLLLoss.html#torch.nn.GaussianNLLLoss "torch.nn.GaussianNLLLoss")                                                         | Gaussian negative log likelihood loss.                                                                                                                                                                                                                                                                                                                                              |
+| [`nn.KLDivLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.KLDivLoss.html#torch.nn.KLDivLoss "torch.nn.KLDivLoss")                                                                                 | The Kullback-Leibler divergence loss.                                                                                                                                                                                                                                                                                                                                               |
+| [`nn.BCELoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.BCELoss.html#torch.nn.BCELoss "torch.nn.BCELoss")                                                                                         | Creates a criterion that measures the Binary Cross Entropy between the target and the input probabilities:                                                                                                                                                                                                                                                                          |
+| [`nn.BCEWithLogitsLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.BCEWithLogitsLoss.html#torch.nn.BCEWithLogitsLoss "torch.nn.BCEWithLogitsLoss")                                                 | This loss combines a Sigmoid layer and the BCELoss in one single class.                                                                                                                                                                                                                                                                                                             |
+| [`nn.MarginRankingLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.MarginRankingLoss.html#torch.nn.MarginRankingLoss "torch.nn.MarginRankingLoss")                                                 | Creates a criterion that measures the loss given inputs x1x1, x2x2, two 1D mini-batch or 0D Tensors, and a label 1D mini-batch or 0D Tensor yy (containing 1 or -1).                                                                                                                                                                                                                |
+| [`nn.HingeEmbeddingLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.HingeEmbeddingLoss.html#torch.nn.HingeEmbeddingLoss "torch.nn.HingeEmbeddingLoss")                                             | Measures the loss given an input tensor xx and a labels tensor yy (containing 1 or -1).                                                                                                                                                                                                                                                                                             |
+| [`nn.MultiLabelMarginLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.MultiLabelMarginLoss.html#torch.nn.MultiLabelMarginLoss "torch.nn.MultiLabelMarginLoss")                                     | Creates a criterion that optimizes a multi-class multi-classification hinge loss (margin-based loss) between input xx (a 2D mini-batch Tensor) and output yy (which is a 2D Tensor of target class indices).                                                                                                                                                                        |
+| [`nn.HuberLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.HuberLoss.html#torch.nn.HuberLoss "torch.nn.HuberLoss")                                                                                 | Creates a criterion that uses a squared term if the absolute element-wise error falls below delta and a delta-scaled L1 term otherwise.                                                                                                                                                                                                                                             |
+| [`nn.SmoothL1Loss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.SmoothL1Loss.html#torch.nn.SmoothL1Loss "torch.nn.SmoothL1Loss")                                                                     | Creates a criterion that uses a squared term if the absolute element-wise error falls below beta and an L1 term otherwise.                                                                                                                                                                                                                                                          |
+| [`nn.SoftMarginLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.SoftMarginLoss.html#torch.nn.SoftMarginLoss "torch.nn.SoftMarginLoss")                                                             | Creates a criterion that optimizes a two-class classification logistic loss between input tensor xx and target tensor yy (containing 1 or -1).                                                                                                                                                                                                                                      |
+| [`nn.MultiLabelSoftMarginLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.MultiLabelSoftMarginLoss.html#torch.nn.MultiLabelSoftMarginLoss "torch.nn.MultiLabelSoftMarginLoss")                     | Creates a criterion that optimizes a multi-label one-versus-all loss based on max-entropy, between input xx and target yy of size (N,C)(N,C).                                                                                                                                                                                                                                       |
+| [`nn.CosineEmbeddingLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.CosineEmbeddingLoss.html#torch.nn.CosineEmbeddingLoss "torch.nn.CosineEmbeddingLoss")                                         | Creates a criterion that measures the loss given input tensors x1x1​, x2x2​ and a Tensor label yy with values 1 or -1.                                                                                                                                                                                                                                                              |
+| [`nn.MultiMarginLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.MultiMarginLoss.html#torch.nn.MultiMarginLoss "torch.nn.MultiMarginLoss")                                                         | Creates a criterion that optimizes a multi-class classification hinge loss (margin-based loss) between input xx (a 2D mini-batch Tensor) and output yy (which is a 1D tensor of target class indices, 0≤y≤x.size(1)−10≤y≤x.size(1)−1):                                                                                                                                              |
+| [`nn.TripletMarginLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.TripletMarginLoss.html#torch.nn.TripletMarginLoss "torch.nn.TripletMarginLoss")                                                 | Creates a criterion that measures the triplet loss given an input tensors x1x1, x2x2, x3x3 and a margin with a value greater than 00.                                                                                                                                                                                                                                               |
+| [`nn.TripletMarginWithDistanceLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.TripletMarginWithDistanceLoss.html#torch.nn.TripletMarginWithDistanceLoss "torch.nn.TripletMarginWithDistanceLoss") | Creates a criterion that measures the triplet loss given input tensors aa, pp, and nn (representing anchor, positive, and negative examples, respectively), and a nonnegative, real-valued function ("distance function") used to compute the relationship between the anchor and positive example ("positive distance") and the anchor and negative example ("negative distance"). |
+|                                                                                                                                                                                                                |                                                                                                                                                                                                                                                                                                                                                                                     |
+$\hat{y}_i$ - это предсказание сети 
+$y_i$ - это правильный ответ 
+это все функции потер в Pytorch, но для себя я выделю парочку:
+
+### 1. `nn.MSELoss`
+**Для:** регрессии.
+
+Когда нужно предсказывать число:
+- Цена квартиры
+- Температура
+- Возраст
+- Координаты объекта
+***Формула:***
+
+$$
+L = \frac{1}{N}\sum_{i=1}^{N}(y_i - \hat{y}_i)^2
+$$
+---
+Пример:
+
+``` Python
+pred = torch.tensor([4.0])
+target = torch.tensor([5.0])
+```
+---
+Ошибка:
+```
+(5 - 4)^2 = 1
+```
+**Принцип:** *большие ошибки штрафуются сильнее.*
+Ошибка:
+
+$1 → 1² = 1$
+$2 → 2² = 4$
+$10 → 10² = 100$
+
+Поэтому сеть старается избавиться от крупных промахов.
+
+### 2. `nn.L1Loss`
+**Для:** регрессии.
+
+***Формула***
+$$
+L = \frac{1}{N}\sum_{i=1}^{N}|y_i - \hat{y}_i|
+$$
+
+---
+**Принцип**
+Штраф линейный.
+
+```
+Ошибка = 1  → 1
+Ошибка = 2  → 2
+Ошибка = 10 → 10
+```
+Менее чувствительна к выбросам, чем MSE.
+### 3. `nn.CrossEntropyLoss`
+
+**Для:** многоклассовой классификации.
+Используется в:
+> MNIST
+> CIFAR
+> ImageNet
+> BERT
+> GPT
+> LLM
+
+***Формула:***
+
+$$
+L = -\sum_{c=1}^{C} y_c \log(p_c)
+$$
+
+где:
+$y_c$  — истинный класс (one-hot)
+$p_c$  — вероятность класса после Softmax
+ Что делает внутри
+
+```
+Softmax
++
+NLLLoss
+```
+Поэтому:
+```Python
+loss = nn.CrossEntropyLoss()
+```
+и отдельно делать Softmax НЕ нужно.
+
+## 4. `nn.BCEWithLogitsLoss`
+!***Binary Cross Entropy, BCE***! (Бинарная кросс-энтропия) базовая функция потерь в машинном обучении для задач классификации с двумя возможными исходами
+
+**Для:** бинарной классификации.
+Примеры:
+```
+Спам / не спам
+Кот / не кот
+Болен / здоров
+```
+***Формула***
+
+$$
+L =
+-\frac{1}{N}
+\sum_{i=1}^{N}
+\Big[
+y_i \log(\sigma(x_i))
++
+(1-y_i)\log(1-\sigma(x_i))
+\Big]
+$$
+где:
+$σ(x) — сигмоида (Sigmoid)$
+Что делает внутри
+```
+Sigmoid
++
+BCELoss
+```
+Поэтому сигмоиду вручную применять не нужно.
+### 5. `nn.BCELoss`
+***Формула***
+$$
+L =
+-\frac{1}{N}
+\sum_{i=1}^{N}
+\Big[
+y_i \log(x_i)
++
+(1-y_i)\log(1-x_i)
+\Big]
+$$
+Особенность
+Ожидает вероятность:
+
+```
+0 ≤ x ≤ 1
+```
+
+На практике почти всегда используют:
+```Python
+nn.BCEWithLogitsLoss()
+```
+
+## torch.optim (оптимизация "начало обучения")
+**Стохастический градиентный спуск (SGD, Stochastic Gradient Descent)** - *это алгоритм оптимизации, который изменяет веса нейросети так чтобы уменьшить функцию потерь ([[Loss]]/Loss.md).*
+
+$w_{new} = w_{old} - \eta \nabla L$
+
+$w$ - веса модели
+$η (eta)$ - learning rate
+$∇L$ - градиент функции потерь
+
+**Mini-batch SGD** - *это все тоже, что и свыше, но теперь мы берем батчи (небольшой размер): `32`, `64`, `128`....*
+далее градиент loss(a) -> обновление весов
+
+```Python
+# На вход оптимизатору подаются параметры модели: model.parameters()
+optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
+```
+`model.parameters()` - веса модели (где model объект на основе класса (нашего класса), созданного при наследование от `nn.Module`)
+`lr` - learning rate
+Оптимизатор предоставляет две полезные функции: 
+`optimizer.step()` и `optimizer.zero_grad()`
+`optimizer.step()` - эта функция обновляет параметры на основе градиентов, как написано выше. 
+`optimizer.zero_grad()` - обнуляет все градиенты, это очень важная функция, если бы мы вызвали `backward` функцию для функции потерь, когда градиенты параметров не равны нулю после предыдущего пакета, новые градиенты фактически добавились бы к предыдущим, а не перезаписали бы их (а это уже сломает обучение).
+
+> [!NOTE] ПЕРЕД КАЖДЫМ `backward`
+> `optimizer.zero_grad()`
+
+Вспомним 5 главных шагов
+1. Получите пакет данных из загрузчика
+    
+2. Получите прогнозы модели для пакета
+    
+3. Рассчитайте потери на основе разницы между прогнозами и метками
+    
+4. Обратное распространение: рассчитайте градиенты для каждого параметра в зависимости от потерь
+    
+5. Обновите параметры модели в соответствии с градиентами
+
+
