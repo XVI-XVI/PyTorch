@@ -1,4 +1,6 @@
 *тут я буду че то решать, скидывать решение и проводить работу над ошибками*
+
+# XOR модель
 ```Python
 import time  
 import matplotlib.pyplot as plt  
@@ -116,4 +118,247 @@ while True:
         pred = (prob > 0.5).int()  
   
         print(pred.item())
+```
+# X + Y + Z Model
+тупая нейронка (умножение), я ее много раз учил, менял ей данные, но пока что это лучший вариант
+```Python
+import time  
+import matplotlib.pyplot as plt  
+import matplotlib_inline.backend_inline  
+import numpy as np  
+import torch  
+import torch.nn as nn  
+import torch.utils.data as data  
+from matplotlib.colors import to_rgba  
+from torch import Tensor  
+from tqdm import tqdm  # Progress bar  
+# matplotlib_inline.backend_inline.set_matplotlib_formats("svg", "pdf")  # For export  
+import torch  
+  
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")  
+  
+  
+class SumNet(nn.Module):  
+    def __init__(self, hidden_size):  
+        super().__init__()  
+        self.linear1 = nn.Linear(3, hidden_size)  
+        self.fn = nn.ReLU()  
+        self.linear2 = nn.Linear(hidden_size, hidden_size)  
+        self.linear3 = nn.Linear(hidden_size, 1)  
+  
+    def forward(self, x):  
+        x = self.linear1(x)  
+        x = self.fn(x)  
+        x = self.linear2(x)  
+        x = self.fn(x)  
+        x = self.linear3(x)  
+        return x  
+  
+  
+model = SumNet(64)  
+  
+model.to(device)  
+# print("БЕЗ")  
+# with torch.no_grad():  
+#     x = float(input())  
+#     y = float(input())  
+#     z = float(input())  
+#  
+#     inp = torch.tensor([x, y, z], dtype=torch.float32, device=device).unsqueeze(0)  
+#     print(model(inp).item())  
+  
+  
+class SUMDataSet(data.Dataset):  
+    def __init__(self, size):  
+        self.size = size  
+  
+        self.generate_SUM()  
+  
+    def generate_SUM(self):  
+        data = torch.randn(self.size,3,dtype=torch.float32) * 2  
+  
+        label = data.prod(1).to(torch.float)  
+  
+        self.data = data  
+        self.label = label  
+  
+    def __len__(self):  
+        return self.size  
+  
+    def __getitem__(self, indx):  
+        return self.data[indx], self.label[indx]  
+  
+  
+train_data = SUMDataSet(10000)  
+# for i in range(len(train_data)):  
+#     print(train_data[i])  
+data_train_loader = data.DataLoader(train_data, batch_size=256, shuffle=True, drop_last=True)  
+loss_fn = nn.MSELoss()  
+optimazer = torch.optim.Adam(model.parameters(), lr=0.001)  
+  
+def train_model(model, optimizer, data_loader, num_epochs = 200):  
+    model.train()  
+    for epoch in tqdm(range(num_epochs)):  
+        for data_inputs, data_label in data_loader:  
+            data_inputs = data_inputs.to(device)  
+            data_label = data_label.to(device)  
+  
+            preds = model(data_inputs).squeeze(1)  
+  
+            loss = loss_fn(preds, data_label)  
+  
+            optimizer.zero_grad()  
+            loss.backward()  
+            optimizer.step()  
+  
+train_model(model, optimazer, data_train_loader)  
+# for name, param in model.named_parameters():  
+#     print(name, param)  
+  
+model.eval()  
+while True:  
+    with torch.no_grad():  
+        x = float(input())  
+        y = float(input())  
+        z = float(input())  
+  
+        inp = torch.tensor([x, y, z], dtype=torch.float32, device=device).unsqueeze(0)  
+        print(model(inp).item())
+```
+## Довел док конца:
+```Python
+import time  
+import matplotlib.pyplot as plt  
+import matplotlib_inline.backend_inline  
+import numpy as np  
+import torch  
+import torch.nn as nn  
+import torch.utils.data as data  
+from matplotlib.colors import to_rgba  
+from torch import Tensor  
+from tqdm import tqdm  # Progress bar  
+# matplotlib_inline.backend_inline.set_matplotlib_formats("svg", "pdf")  # For export  
+import torch  
+  
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")  
+count = 1  
+  
+  
+class SumNet(nn.Module):  
+    def __init__(self, hidden_size):  
+        super().__init__()  
+        self.linear1 = nn.Linear(3, hidden_size)  
+        self.fn = nn.ReLU()  
+        self.linear2 = nn.Linear(hidden_size, hidden_size)  
+        self.linear3 = nn.Linear(hidden_size, 1)  
+  
+    def forward(self, x):  
+        x = self.linear1(x)  
+        x = self.fn(x)  
+        x = self.linear2(x)  
+        x = self.fn(x)  
+        x = self.linear3(x)  
+        return x  
+  
+  
+model = SumNet(100)  
+  
+model.to(device)  
+  
+  
+def test():  
+    while True:  
+        with torch.no_grad():  
+            try:  
+                x = input("№1: ")  
+                if x.lower() == "s" or x.lower() == "ы":  
+                    break  
+                x = float(x)  
+  
+                y = input("№2: ")  
+                if y.lower() == "s" or y.lower() == "ы":  
+                    break  
+                y = float(y)  
+  
+                z = input("№3: ")  
+                if z.lower() == "s" or z.lower() == "ы":  
+                    break  
+                z = float(z)  
+            except ValueError:  
+                continue  
+            inp = torch.tensor([x, y, z], dtype=torch.float32, device=device).unsqueeze(0)  
+            print(model(inp).item())  
+  
+  
+print("--- БЕЗ обучения ---")  
+test()  
+  
+  
+class SUMDataSet(data.Dataset):  
+    def __init__(self, size):  
+        self.size = size  
+  
+        self.generate_SUM()  
+  
+    def generate_SUM(self):  
+        data = torch.randn(self.size, 3, dtype=torch.float32) * 2  
+  
+        label = data.prod(1).to(torch.float)  
+  
+        self.data = data  
+        self.label = label  
+  
+    def __len__(self):  
+        return self.size  
+  
+    def __getitem__(self, indx):  
+        return self.data[indx], self.label[indx]  
+  
+  
+train_data = SUMDataSet(20000)  
+# for i in range(len(train_data)):  
+#     print(train_data[i])  
+data_train_loader = data.DataLoader(train_data, batch_size=512, shuffle=True, drop_last=True)  
+loss_fn = nn.MSELoss()  
+optimazer = torch.optim.Adam(model.parameters(), lr=0.01)  
+  
+  
+def train_model(model, optimizer, data_loader, num_epochs=100):  
+    model.train()  
+    print(f"    |Обучение №{count}|")  
+    for epoch in tqdm(range(num_epochs)):  
+        for data_inputs, data_label in data_loader:  
+            data_inputs = data_inputs.to(device)  
+            data_label = data_label.to(device)  
+  
+            preds = model(data_inputs).squeeze(1)  
+  
+            loss = loss_fn(preds, data_label)  
+  
+            optimizer.zero_grad()  
+            loss.backward()  
+            optimizer.step()  
+    model.eval()  
+  
+  
+train_model(model, optimazer, data_train_loader)  
+# for name, param in model.named_parameters():  
+#     print(name, param)  
+  
+print("--- после обучения №1 ---")  
+test()  
+count += 1  
+  
+optimazer = torch.optim.Adam(model.parameters(), lr=0.001)  
+train_model(model, optimazer, data_train_loader)  
+print("--- после обучения №2 ---")  
+test()  
+count += 1  
+  
+  
+optimazer = torch.optim.Adam(model.parameters(), lr=0.0001)  
+data_train_loader = data.DataLoader(train_data, batch_size=1000, shuffle=True, drop_last=True)  
+train_model(model, optimazer, data_train_loader, 50)  
+print("--- после обучения №3 ---")  
+test()
 ```
