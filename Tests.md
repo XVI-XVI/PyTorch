@@ -225,7 +225,7 @@ while True:
         inp = torch.tensor([x, y, z], dtype=torch.float32, device=device).unsqueeze(0)  
         print(model(inp).item())
 ```
-## Довел док конца:
+## Что то изменил:
 ```Python
 import time  
 import matplotlib.pyplot as plt  
@@ -360,5 +360,348 @@ optimazer = torch.optim.Adam(model.parameters(), lr=0.0001)
 data_train_loader = data.DataLoader(train_data, batch_size=1000, shuffle=True, drop_last=True)  
 train_model(model, optimazer, data_train_loader, 50)  
 print("--- после обучения №3 ---")  
+test()
+```
+
+## версия с тестом
+```Python
+import time  
+# import matplotlib.pyplot as plt  
+# import matplotlib_inline.backend_inline  
+import numpy as np  
+import torch  
+import torch.nn as nn  
+import torch.utils.data as data  
+from matplotlib.colors import to_rgba  
+from torch import Tensor  
+from tqdm import tqdm  # Progress bar  
+# matplotlib_inline.backend_inline.set_matplotlib_formats("svg", "pdf")  # For export  
+import torch  
+  
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")  
+count = 1  
+  
+  
+class SumNet(nn.Module):  
+    def __init__(self, hidden_size):  
+        super().__init__()  
+        self.linear1 = nn.Linear(3, hidden_size)  
+        self.fn = nn.ReLU()  
+        self.linear2 = nn.Linear(hidden_size, hidden_size)  
+        self.linear3 = nn.Linear(hidden_size, 1)  
+  
+    def forward(self, x):  
+        x = self.linear1(x)  
+        x = self.fn(x)  
+        x = self.linear2(x)  
+        x = self.fn(x)  
+        x = self.linear3(x)  
+        return x  
+  
+  
+model = SumNet(100)  
+  
+model.to(device)  
+  
+  
+def test():  
+    while True:  
+        with torch.no_grad():  
+            try:  
+                x = input("№1: ")  
+                if x.lower() == "s" or x.lower() == "ы":  
+                    break  
+                x = float(x)  
+  
+                y = input("№2: ")  
+                if y.lower() == "s" or y.lower() == "ы":  
+                    break  
+                y = float(y)  
+  
+                z = input("№3: ")  
+                if z.lower() == "s" or z.lower() == "ы":  
+                    break  
+                z = float(z)  
+            except ValueError:  
+                continue  
+            inp = torch.tensor([x, y, z], dtype=torch.float32, device=device).unsqueeze(0)  
+            print(model(inp).item())  
+  
+  
+print("--- БЕЗ обучения ---")  
+test()  
+  
+  
+class SUMDataSet(data.Dataset):  
+    def __init__(self, size):  
+        self.size = size  
+  
+        self.generate_SUM()  
+  
+    def generate_SUM(self):  
+        data = torch.randn(self.size, 3, dtype=torch.float32) * 2  
+  
+        label = data.prod(1).to(torch.float)  
+  
+        self.data = data  
+        self.label = label  
+  
+    def __len__(self):  
+        return self.size  
+  
+    def __getitem__(self, indx):  
+        return self.data[indx], self.label[indx]  
+  
+  
+train_data = SUMDataSet(20000)  
+# for i in range(len(train_data)):  
+#     print(train_data[i])  
+data_train_loader = data.DataLoader(train_data, batch_size=512, shuffle=True, drop_last=True)  
+loss_fn = nn.MSELoss()  
+optimazer = torch.optim.Adam(model.parameters(), lr=0.01)  
+  
+  
+def train_model(model, optimizer, data_loader, num_epochs=100):  
+    model.train()  
+    print(f"    |Обучение №{count}|")  
+    for epoch in tqdm(range(num_epochs)):  
+        for data_inputs, data_label in data_loader:  
+            data_inputs = data_inputs.to(device)  
+            data_label = data_label.to(device)  
+  
+            preds = model(data_inputs).squeeze(1)  
+  
+            loss = loss_fn(preds, data_label)  
+  
+            optimizer.zero_grad()  
+            loss.backward()  
+            optimizer.step()  
+    model.eval()  
+  
+  
+def test_model(model, data_loader):  
+    model.eval()  
+    total_accuracy, num_preds = 0.0, 0.0  
+  
+    with torch.no_grad():  
+        for data_inputs, data_label in data_loader:  
+            data_inputs, data_label = data_inputs.to(device), data_label.to(device)  
+            preds = model(data_inputs).squeeze(1)  
+  
+            p = torch.abs(preds) + 1e-5  
+            l = torch.abs(data_label) + 1e-5  
+  
+            accuracy_batch = torch.minimum(p, l) / torch.maximum(p, l)  
+  
+            total_accuracy += accuracy_batch.sum().item()  
+            num_preds += data_label.shape[0]  
+  
+    mean_accuracy = total_accuracy / num_preds  
+    print(f"\nAccuracy of the model: {100.0 * mean_accuracy:4.2f}%\n")  
+  
+data_test_loader = data.DataLoader(train_data, batch_size=512, shuffle=False, drop_last=True)  
+test_model(model, data_test_loader)  
+train_model(model, optimazer, data_train_loader)  
+# for name, param in model.named_parameters():  
+#     print(name, param)  
+  
+print("--- после обучения №1 ---")  
+# test()  
+count += 1  
+test_model(model, data_test_loader)  
+  
+optimazer = torch.optim.Adam(model.parameters(), lr=0.001)  
+train_model(model, optimazer, data_train_loader)  
+print("--- после обучения №2 ---")  
+# test()  
+count += 1  
+test_model(model, data_test_loader)  
+  
+optimazer = torch.optim.Adam(model.parameters(), lr=0.0001)  
+data_train_loader = data.DataLoader(train_data, batch_size=128, shuffle=True, drop_last=True)  
+train_model(model, optimazer, data_train_loader, 50)  
+print("--- после обучения №3 ---")  
+# test()  
+test_model(model, data_test_loader)
+```
+
+что бы уменьшить % ошибки, я сменил функцию активации c `ReLU` на `GELU`
+
+```Python
+....
+class SumNet(nn.Module):  
+    def __init__(self, hidden_size):  
+        super().__init__()  
+        self.linear1 = nn.Linear(3, hidden_size)  
+        self.fn = nn.GELU()  
+        self.linear2 = nn.Linear(hidden_size, hidden_size)  
+        self.linear3 = nn.Linear(hidden_size, 1)
+        
+        
+....
+```
+итог, процент с ~89%, вырос до ~94%!
+
+## Итоговый код
+
+```Python
+import time  
+# import matplotlib.pyplot as plt  
+# import matplotlib_inline.backend_inline  
+import numpy as np  
+import torch  
+import torch.nn as nn  
+import torch.utils.data as data  
+from matplotlib.colors import to_rgba  
+from torch import Tensor  
+from tqdm import tqdm  # Progress bar  
+# matplotlib_inline.backend_inline.set_matplotlib_formats("svg", "pdf")  # For export  
+import torch  
+  
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")  
+count = 1  
+  
+  
+class SumNet(nn.Module):  
+    def __init__(self, hidden_size):  
+        super().__init__()  
+        self.linear1 = nn.Linear(3, hidden_size)  
+        self.fn = nn.GELU()  
+        self.linear2 = nn.Linear(hidden_size, hidden_size)  
+        self.linear3 = nn.Linear(hidden_size, 1)  
+  
+    def forward(self, x):  
+        x = self.linear1(x)  
+        x = self.fn(x)  
+        x = self.linear2(x)  
+        x = self.fn(x)  
+        x = self.linear3(x)  
+        return x  
+  
+  
+model = SumNet(100)  
+  
+model.to(device)  
+  
+  
+def test():  
+    while True:  
+        with torch.no_grad():  
+            try:  
+                x = input("№1: ")  
+                if x.lower() == "s" or x.lower() == "ы":  
+                    break  
+                x = float(x)  
+  
+                y = input("№2: ")  
+                if y.lower() == "s" or y.lower() == "ы":  
+                    break  
+                y = float(y)  
+  
+                z = input("№3: ")  
+                if z.lower() == "s" or z.lower() == "ы":  
+                    break  
+                z = float(z)  
+            except ValueError:  
+                continue  
+            inp = torch.tensor([x, y, z], dtype=torch.float32, device=device).unsqueeze(0)  
+            print(model(inp).item())  
+  
+  
+print("--- БЕЗ обучения ---")  
+test()  
+  
+  
+class SUMDataSet(data.Dataset):  
+    def __init__(self, size):  
+        self.size = size  
+  
+        self.generate_SUM()  
+  
+    def generate_SUM(self):  
+        data = torch.randn(self.size, 3, dtype=torch.float32) * 2  
+  
+        label = data.prod(1).to(torch.float)  
+  
+        self.data = data  
+        self.label = label  
+  
+    def __len__(self):  
+        return self.size  
+  
+    def __getitem__(self, indx):  
+        return self.data[indx], self.label[indx]  
+  
+  
+train_data = SUMDataSet(20000)  
+test_data = SUMDataSet(10000)  
+# for i in range(len(train_data)):  
+#     print(train_data[i])  
+data_train_loader = data.DataLoader(train_data, batch_size=512, shuffle=True, drop_last=True)  
+loss_fn = nn.MSELoss()  
+optimizer = torch.optim.Adam(model.parameters(), lr=0.01)  
+  
+  
+def train_model(model, optimizer, data_loader, num_epochs=100):  
+    model.train()  
+    print(f"    |Обучение №{count}|")  
+    for epoch in tqdm(range(num_epochs)):  
+        for data_inputs, data_label in data_loader:  
+            data_inputs = data_inputs.to(device)  
+            data_label = data_label.to(device)  
+  
+            preds = model(data_inputs).squeeze(1)  
+  
+            loss = loss_fn(preds, data_label)  
+  
+            optimizer.zero_grad()  
+            loss.backward()  
+            optimizer.step()  
+    model.eval()  
+  
+  
+def test_model(model, data_loader):  
+    model.eval()  
+    total_accuracy, num_preds = 0.0, 0.0  
+  
+    with torch.no_grad():  
+        for data_inputs, data_label in data_loader:  
+            data_inputs, data_label = data_inputs.to(device), data_label.to(device)  
+            preds = model(data_inputs).squeeze(1)  
+  
+            p = torch.abs(preds) + 1e-5  
+            l = torch.abs(data_label) + 1e-5  
+  
+            accuracy_batch = torch.minimum(p, l) / torch.maximum(p, l)  
+  
+            total_accuracy += accuracy_batch.sum().item()  
+            num_preds += data_label.shape[0]  
+  
+    mean_accuracy = total_accuracy / num_preds  
+    print(f"\nAccuracy of the model: {100.0 * mean_accuracy:4.2f}%\n")  
+  
+data_test_loader = data.DataLoader(test_data, batch_size=512, shuffle=False, drop_last=True)  
+test_model(model, data_test_loader)  
+train_model(model, optimizer, data_train_loader)  
+# for name, param in model.named_parameters():  
+#     print(name, param)  
+  
+print("--- после обучения №1 ---")  
+# test()  
+count += 1  
+test_model(model, data_test_loader)  
+  
+optimazer = torch.optim.Adam(model.parameters(), lr=0.001)  
+train_model(model, optimazer, data_train_loader)  
+print("--- после обучения №2 ---")  
+# test()  
+count += 1  
+test_model(model, data_test_loader)  
+  
+optimazer = torch.optim.Adam(model.parameters(), lr=0.0001)  
+data_train_loader = data.DataLoader(train_data, batch_size=128, shuffle=True, drop_last=True)  
+train_model(model, optimazer, data_train_loader, 50)  
+print("--- после обучения №3 ---")  
+test_model(model, data_test_loader)  
 test()
 ```
