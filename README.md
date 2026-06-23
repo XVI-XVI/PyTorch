@@ -777,7 +777,7 @@ $$
 \frac{\partial L}{\partial w}
 $$
 
-**`.backward()`** - это кнопка (метод) запуска автоматического расчета производных (градиентов) по всему пройденному пути вычислений.
+**`.backward()`** - это метод (как кнопка) запуска автоматического расчета производных (градиентов) по всему пройденному пути вычислений.
 #### with torch.no_grad()
 
 with torch.no_grad() - убирает всю отслежу градиентов внутри самого вызова
@@ -787,6 +787,17 @@ with torch.no_grad():
 	# Внутри этого блока тумблер requires_grad временно блокируется для ВСЕХ     тензоров
 	result = x * 2
 ```
+
+### **расчет новых весов формула обновления весов при обучении** (gradient descent)
+
+$w_{\text{new}} = w_{\text{old}} - \eta \cdot \frac{\partial L}{\partial w}$
+$b_{\text{new}} = b_{\text{old}} - \eta \cdot \frac{\partial L}{\partial b}$
+Где:
+
+- $w_{\text{old}}$ - текущий вес (до обновления)
+- $w_{\text{new}}$ - обновлённый вес (после шага)
+- $\eta$ (эта) - learning rate (скорость обучения), маленькое число, например 0.01 или 0.001
+- $\dfrac{\partial L}{\partial w}$ - градиент функции потерь $L$ по весу $w$ (показывает, в какую сторону и насколько сильно нужно менять вес, чтобы уменьшить ошибку)
 ## **Параметры нейросети** и пример xor
 [[Перцептрон]] / Перцептрон.md (чек)
 ### фичи и батчи
@@ -879,28 +890,70 @@ $$k = \frac{1}{\sqrt{\text{ВХОДЫ}}}$$
 ==**Функции активации**== - это математический компонент искусственного нейрона, который определяет, передавать ли полученный сигнал дальше по сети.
 Нужна она по одной важнейшей причине:
 - нелинейность - ибо без нее это обычная прямая, одна из причин почему после [[Перцептрон |перцептрона]] было затишье, это тупо невозможность решить XOR задачи и т.п. 
-###### 1. Когда нужно строго от 0 до 1 (Меньше или равно 1) — `Sigmoid`
+  
+Если это “операция над тензором” → `torch.*`  
+- пишется **с маленькой буквы**
+- это просто операции над тензорами
+```Python
+torch.sigmoid(x)
+torch.relu(x)
+torch.softmax(x, dim=-1)
+```
+
+Если это “часть архитектуры модели” → `nn.*`
+- пишется **с большой буквы**
+- это слои (modules), которые создаются как объект
+```Python
+nn.Sigmoid()
+nn.ReLU()
+nn.Linear(128, 64)
+```
+
+#### 1. Когда нужно строго от 0 до 1 (Меньше или равно 1) — `nn.Sigmoid`
 
 Она сжимает любое число (хоть $-9999$, хоть $+9999$) в диапазон **от 0 до 1**.
 
 - **Зачем:** Идеально подходит для финального слоя, когда сеть должна выдать вероятность. Например: _"С вероятностью 0.87 (87%) на этой картинке кот"_.
     
-###### 2. Когда нужно от -1 до 1 - `Tanh` (Гиперболический тангенс)
+$$
+\sigma(x) = \frac{1}{1 + e^{-x}}
+$$
+
+
+#### 2. Когда нужно от -1 до 1 - `nn.Tanh` (Гиперболический тангенс)
 
 Похожа на сигмоиду, но сжимает данные в диапазон **от -1 до 1**.
 
 - **Зачем:** Часто используется во внутренних слоях, потому что когда среднее значение выходов близко к нулю, нейросеть обучается быстрее и стабильнее.
-    
-###### 3. Когда значение может быть ГОРАЗДО БОЛЬШЕ 1 - `ReLU`
+    $$
+\tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}
+$$
 
+#### 3. Когда значение может быть ГОРАЗДО БОЛЬШЕ 1 - `nn.ReLU()`
+$$
+\mathrm{ReLU}(x) = \max(0, x)
+$$
 Это самая популярная функция активации в современных нейросетях. Её логика гениально проста: если на вход пришло отрицательное число, она превращает его в $0$. Если пришло положительное — она **пропускает его как есть, вообще не изменяя**.
 - **Значение:** Если нейрону пришло число $150$, на выходе будет $150$ (что намного больше 1).
     
 - **Зачем:** Она работает невероятно быстро (компьютеру не нужно считать сложные экспоненты, как в сигмоиде) и решает проблему «затухания градиентов», из-за которой глубокие сети раньше не могли обучаться.
-###### 4. Когда сумма всех выходов должна быть строго равна 1 — `Softmax`
-
+#### 4. Когда сумма всех выходов должна быть строго равна 1 — `Softmax`
+$$
+\mathrm{softmax}(x_i) = \frac{e^{x_i}}{\sum_{j=1}^{n} e^{x_j}}
+$$
 Применяется на самом последнем слое в задачах мультиклассификации (когда нужно выбрать один вариант из нескольких, например: это собака, кошка или попугай?). Она превращает выходы в набор вероятностей, которые в сумме дают ровно **1.0 (100%)**
-###### 5. `nn.GELU()` -Gaussian Error Linear Unit 
+
+Важный нюанс - softmax почти никогда не добавляют вручную в `forward()`
+Как и с `BCEWithLogitsLoss` для бинарной классификации, для многоклассовой используют:
+
+```python
+loss_fn = nn.CrossEntropyLoss()  # сама применяет softmax + логарифм внутри
+```
+
+`CrossEntropyLoss` ожидает на входе **сырые логиты** (как в примере выше), а softmax считает внутри себя - по тем же причинам численной стабильности.
+
+Softmax вручную ты вызываешь только тогда, когда хочешь **посмотреть** реальные вероятности - например, при инференсе:
+#### 5. `nn.GELU()` - Gaussian Error Linear Unit 
 `nn.GELU()` - это нелинейная функция активации, которая масштабирует входное значение в зависимости от того, насколько оно больше других значений в вероятностном распределении (используется функция ошибок Гаусса).
 
 Она довольно сложная, так как завязана на теорию вероятностей и кумулятивное нормальное распределение (функцию Гаусса):
@@ -917,6 +970,14 @@ $$f(x) \approx 0.5x \cdot \left(1 + \tanh\left(\sqrt{\frac{2}{\pi}} \cdot (x + 0
 - При больших отрицательных $x$ она плавно зануляется.
     
 - **В районе нуля (от -2 до 0) она образует плавную ямку.** Если на вход пришло `-0.5`, GELU не превратит его в жесткий ноль. Она позволит небольшому отрицательному сигналу пройти дальше.
+  
+#### `nn.SiLU` (Sigmoid Linear Unit) - также известная как **Swish** 
+функция активации, которая умножает вход на сигмоиду от самого себя. Таже не линейная функция активации, которая очень похоже (смежна)  с функциями `ReLU` и `GELU`. 
+Она на порядок глаже `GELU`, но у `SiLU` чуть больше отрицательных значений на выходе, 0 у этой функции один, для x = 0 => f(x) = 0
+
+
+$$\operatorname{SiLU}(x) = x \cdot \sigma(x) = \dfrac{x}{1 + e^{-x}}$$
+
 #### **`ReLU`**
 `ReLu` - *функция активации, которая пропускает положительные числа (без изменений), но когда отрицательные числа или 0, то превращает эти числа в `0`.*
 -33 => 0
@@ -1078,35 +1139,69 @@ class MyDataset(data.Dataset):
 
 - `drop_last=True`: Если 203 картинки, а `batch_size=10`, то в конце останется «хвостик» из 3 картинок. Этот флаг просто выкидывает этот неполный хвостик, чтобы размер батчей всегда был одинаковым.
 ## Функция потерь
-|                                                                                                                                                                                                                |                                                                                                                                                                                                                                                                                                                                                                                     |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`nn.L1Loss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.L1Loss.html#torch.nn.L1Loss "torch.nn.L1Loss")                                                                                             | Creates a criterion that measures the mean absolute error (MAE) between each element in the input xx and target yy.                                                                                                                                                                                                                                                                 |
-| [`nn.MSELoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.MSELoss.html#torch.nn.MSELoss "torch.nn.MSELoss")                                                                                         | Creates a criterion that measures the mean squared error (squared L2 norm) between each element in the input xx and target yy.                                                                                                                                                                                                                                                      |
-| [`nn.CrossEntropyLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.CrossEntropyLoss.html#torch.nn.CrossEntropyLoss "torch.nn.CrossEntropyLoss")                                                     | This criterion computes the cross entropy loss between input logits and target.                                                                                                                                                                                                                                                                                                     |
-| [`nn.CTCLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.CTCLoss.html#torch.nn.CTCLoss "torch.nn.CTCLoss")                                                                                         | The Connectionist Temporal Classification loss.                                                                                                                                                                                                                                                                                                                                     |
-| [`nn.NLLLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.NLLLoss.html#torch.nn.NLLLoss "torch.nn.NLLLoss")                                                                                         | The negative log likelihood loss.                                                                                                                                                                                                                                                                                                                                                   |
-| [`nn.PoissonNLLLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.PoissonNLLLoss.html#torch.nn.PoissonNLLLoss "torch.nn.PoissonNLLLoss")                                                             | Negative log likelihood loss with Poisson distribution of target.                                                                                                                                                                                                                                                                                                                   |
-| [`nn.GaussianNLLLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.GaussianNLLLoss.html#torch.nn.GaussianNLLLoss "torch.nn.GaussianNLLLoss")                                                         | Gaussian negative log likelihood loss.                                                                                                                                                                                                                                                                                                                                              |
-| [`nn.KLDivLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.KLDivLoss.html#torch.nn.KLDivLoss "torch.nn.KLDivLoss")                                                                                 | The Kullback-Leibler divergence loss.                                                                                                                                                                                                                                                                                                                                               |
-| [`nn.BCELoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.BCELoss.html#torch.nn.BCELoss "torch.nn.BCELoss")                                                                                         | Creates a criterion that measures the Binary Cross Entropy between the target and the input probabilities:                                                                                                                                                                                                                                                                          |
-| [`nn.BCEWithLogitsLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.BCEWithLogitsLoss.html#torch.nn.BCEWithLogitsLoss "torch.nn.BCEWithLogitsLoss")                                                 | This loss combines a Sigmoid layer and the BCELoss in one single class.                                                                                                                                                                                                                                                                                                             |
-| [`nn.MarginRankingLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.MarginRankingLoss.html#torch.nn.MarginRankingLoss "torch.nn.MarginRankingLoss")                                                 | Creates a criterion that measures the loss given inputs x1x1, x2x2, two 1D mini-batch or 0D Tensors, and a label 1D mini-batch or 0D Tensor yy (containing 1 or -1).                                                                                                                                                                                                                |
-| [`nn.HingeEmbeddingLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.HingeEmbeddingLoss.html#torch.nn.HingeEmbeddingLoss "torch.nn.HingeEmbeddingLoss")                                             | Measures the loss given an input tensor xx and a labels tensor yy (containing 1 or -1).                                                                                                                                                                                                                                                                                             |
-| [`nn.MultiLabelMarginLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.MultiLabelMarginLoss.html#torch.nn.MultiLabelMarginLoss "torch.nn.MultiLabelMarginLoss")                                     | Creates a criterion that optimizes a multi-class multi-classification hinge loss (margin-based loss) between input xx (a 2D mini-batch Tensor) and output yy (which is a 2D Tensor of target class indices).                                                                                                                                                                        |
-| [`nn.HuberLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.HuberLoss.html#torch.nn.HuberLoss "torch.nn.HuberLoss")                                                                                 | Creates a criterion that uses a squared term if the absolute element-wise error falls below delta and a delta-scaled L1 term otherwise.                                                                                                                                                                                                                                             |
-| [`nn.SmoothL1Loss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.SmoothL1Loss.html#torch.nn.SmoothL1Loss "torch.nn.SmoothL1Loss")                                                                     | Creates a criterion that uses a squared term if the absolute element-wise error falls below beta and an L1 term otherwise.                                                                                                                                                                                                                                                          |
-| [`nn.SoftMarginLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.SoftMarginLoss.html#torch.nn.SoftMarginLoss "torch.nn.SoftMarginLoss")                                                             | Creates a criterion that optimizes a two-class classification logistic loss between input tensor xx and target tensor yy (containing 1 or -1).                                                                                                                                                                                                                                      |
-| [`nn.MultiLabelSoftMarginLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.MultiLabelSoftMarginLoss.html#torch.nn.MultiLabelSoftMarginLoss "torch.nn.MultiLabelSoftMarginLoss")                     | Creates a criterion that optimizes a multi-label one-versus-all loss based on max-entropy, between input xx and target yy of size (N,C)(N,C).                                                                                                                                                                                                                                       |
-| [`nn.CosineEmbeddingLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.CosineEmbeddingLoss.html#torch.nn.CosineEmbeddingLoss "torch.nn.CosineEmbeddingLoss")                                         | Creates a criterion that measures the loss given input tensors x1x1​, x2x2​ and a Tensor label yy with values 1 or -1.                                                                                                                                                                                                                                                              |
-| [`nn.MultiMarginLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.MultiMarginLoss.html#torch.nn.MultiMarginLoss "torch.nn.MultiMarginLoss")                                                         | Creates a criterion that optimizes a multi-class classification hinge loss (margin-based loss) between input xx (a 2D mini-batch Tensor) and output yy (which is a 1D tensor of target class indices, 0≤y≤x.size(1)−10≤y≤x.size(1)−1):                                                                                                                                              |
-| [`nn.TripletMarginLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.TripletMarginLoss.html#torch.nn.TripletMarginLoss "torch.nn.TripletMarginLoss")                                                 | Creates a criterion that measures the triplet loss given an input tensors x1x1, x2x2, x3x3 and a margin with a value greater than 00.                                                                                                                                                                                                                                               |
-| [`nn.TripletMarginWithDistanceLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.TripletMarginWithDistanceLoss.html#torch.nn.TripletMarginWithDistanceLoss "torch.nn.TripletMarginWithDistanceLoss") | Creates a criterion that measures the triplet loss given input tensors aa, pp, and nn (representing anchor, positive, and negative examples, respectively), and a nonnegative, real-valued function ("distance function") used to compute the relationship between the anchor and positive example ("positive distance") and the anchor and negative example ("negative distance"). |
-|                                                                                                                                                                                                                |                                                                                                                                                                                                                                                                                                                                                                                     |
+|                                                                                                                                                                                                                |                                                                                                                                                                                                                                                                                                                                                                                         |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`nn.L1Loss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.L1Loss.html#torch.nn.L1Loss "torch.nn.L1Loss")                                                                                             | [](https://docs.pytorch.org/docs/2.12/generated/torch.nn.L1Loss.html#torch.nn.L1Loss "torch.nn.L1Loss")Создаёт критерий, измеряющий среднюю абсолютную ошибку (MAE) между каждым элементом входа x и цели y. (логиты принимает)                                                                                                                                                         |
+| [`nn.MSELoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.MSELoss.html#torch.nn.MSELoss "torch.nn.MSELoss")                                                                                         | [](https://docs.pytorch.org/docs/2.12/generated/torch.nn.MSELoss.html#torch.nn.MSELoss "torch.nn.MSELoss")Создаёт критерий, измеряющий среднеквадратичную ошибку (квадрат нормы L2) между каждым элементом входа x и цели y.                                                                                                                                                            |
+| [`nn.CrossEntropyLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.CrossEntropyLoss.html#torch.nn.CrossEntropyLoss "torch.nn.CrossEntropyLoss")                                                     | [](https://docs.pytorch.org/docs/2.12/generated/torch.nn.CrossEntropyLoss.html#torch.nn.CrossEntropyLoss "torch.nn.CrossEntropyLoss")Этот критерий вычисляет перекрёстную энтропию (cross entropy) между входными логитами и целью.                                                                                                                                                     |
+| [`nn.CTCLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.CTCLoss.html#torch.nn.CTCLoss "torch.nn.CTCLoss")                                                                                         | Потеря Connectionist Temporal Classification (для последовательностей без явной разметки выравнивания, например распознавание речи/почерка).                                                                                                                                                                                                                                            |
+| [`nn.NLLLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.NLLLoss.html#torch.nn.NLLLoss "torch.nn.NLLLoss")                                                                                         | [](https://docs.pytorch.org/docs/2.12/generated/torch.nn.NLLLoss.html#torch.nn.NLLLoss "torch.nn.NLLLoss")Потеря негативного логарифмического правдоподобия (negative log likelihood).                                                                                                                                                                                                  |
+| [`nn.PoissonNLLLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.PoissonNLLLoss.html#torch.nn.PoissonNLLLoss "torch.nn.PoissonNLLLoss")                                                             | Потеря негативного логарифмического правдоподобия с распределением Пуассона для цели.                                                                                                                                                                                                                                                                                                   |
+| [`nn.GaussianNLLLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.GaussianNLLLoss.html#torch.nn.GaussianNLLLoss "torch.nn.GaussianNLLLoss")                                                         | [](https://docs.pytorch.org/docs/2.12/generated/torch.nn.GaussianNLLLoss.html#torch.nn.GaussianNLLLoss "torch.nn.GaussianNLLLoss")Гауссова потеря негативного логарифмического правдоподобия.                                                                                                                                                                                           |
+| [`nn.KLDivLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.KLDivLoss.html#torch.nn.KLDivLoss "torch.nn.KLDivLoss")                                                                                 | Потеря на основе расстояния Кульбака-Лейблера (KL-дивергенция).                                                                                                                                                                                                                                                                                                                         |
+| [`nn.BCELoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.BCELoss.html#torch.nn.BCELoss "torch.nn.BCELoss")                                                                                         | [](https://docs.pytorch.org/docs/2.12/generated/torch.nn.BCELoss.html#torch.nn.BCELoss "torch.nn.BCELoss")Создаёт критерий, измеряющий бинарную кросс-энтропию между целью и вероятностями на входе.                                                                                                                                                                                    |
+| [`nn.BCEWithLogitsLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.BCEWithLogitsLoss.html#torch.nn.BCEWithLogitsLoss "torch.nn.BCEWithLogitsLoss")                                                 | Эта потеря объединяет слой Sigmoid и BCELoss в одном классе.                                                                                                                                                                                                                                                                                                                            |
+| [`nn.MarginRankingLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.MarginRankingLoss.html#torch.nn.MarginRankingLoss "torch.nn.MarginRankingLoss")                                                 | [](https://docs.pytorch.org/docs/2.12/generated/torch.nn.MarginRankingLoss.html#torch.nn.MarginRankingLoss "torch.nn.MarginRankingLoss")Создаёт критерий, измеряющий потерю по входам x1, x2 (два одномерных мини-батча или 0D-тензора) и метке y (содержащей 1 или -1).                                                                                                                |
+| [`nn.HingeEmbeddingLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.HingeEmbeddingLoss.html#torch.nn.HingeEmbeddingLoss "torch.nn.HingeEmbeddingLoss")                                             | [](https://docs.pytorch.org/docs/2.12/generated/torch.nn.HingeEmbeddingLoss.html#torch.nn.HingeEmbeddingLoss "torch.nn.HingeEmbeddingLoss")Измеряет потерю по входному тензору x и тензору меток y (содержащему 1 или -1).                                                                                                                                                              |
+| [`nn.MultiLabelMarginLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.MultiLabelMarginLoss.html#torch.nn.MultiLabelMarginLoss "torch.nn.MultiLabelMarginLoss")                                     | [](https://docs.pytorch.org/docs/2.12/generated/torch.nn.MultiLabelMarginLoss.html#torch.nn.MultiLabelMarginLoss "torch.nn.MultiLabelMarginLoss")Создаёт критерий, оптимизирующий hinge-потерю (с отступом) для многоклассовой мультиклассификации между входом x (2D мини-батч тензор) и выходом y (2D тензор индексов целевых классов).                                               |
+| [`nn.HuberLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.HuberLoss.html#torch.nn.HuberLoss "torch.nn.HuberLoss")                                                                                 | [](https://docs.pytorch.org/docs/2.12/generated/torch.nn.HuberLoss.html#torch.nn.HuberLoss "torch.nn.HuberLoss")Создаёт критерий, использующий квадратичный член, если абсолютная поэлементная ошибка меньше delta, и L1-член с масштабом delta в остальных случаях.                                                                                                                    |
+| [`nn.SmoothL1Loss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.SmoothL1Loss.html#torch.nn.SmoothL1Loss "torch.nn.SmoothL1Loss")                                                                     | [](https://docs.pytorch.org/docs/2.12/generated/torch.nn.SmoothL1Loss.html#torch.nn.SmoothL1Loss "torch.nn.SmoothL1Loss")Создаёт критерий, использующий квадратичный член, если абсолютная поэлементная ошибка меньше beta, и L1-член в остальных случаях.                                                                                                                              |
+| [`nn.SoftMarginLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.SoftMarginLoss.html#torch.nn.SoftMarginLoss "torch.nn.SoftMarginLoss")                                                             | [](https://docs.pytorch.org/docs/2.12/generated/torch.nn.SoftMarginLoss.html#torch.nn.SoftMarginLoss "torch.nn.SoftMarginLoss")Создаёт критерий, оптимизирующий логистическую потерю для бинарной классификации между входным тензором x и целевым тензором y (содержащим 1 или -1).                                                                                                    |
+| [`nn.MultiLabelSoftMarginLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.MultiLabelSoftMarginLoss.html#torch.nn.MultiLabelSoftMarginLoss "torch.nn.MultiLabelSoftMarginLoss")                     | [](https://docs.pytorch.org/docs/2.12/generated/torch.nn.MultiLabelSoftMarginLoss.html#torch.nn.MultiLabelSoftMarginLoss "torch.nn.MultiLabelSoftMarginLoss")Создаёт критерий, оптимизирующий потерю "каждый против всех" (one-versus-all) на основе максимальной энтропии для мультиметочной классификации между входом x и целью y размера (N,C).                                     |
+| [`nn.CosineEmbeddingLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.CosineEmbeddingLoss.html#torch.nn.CosineEmbeddingLoss "torch.nn.CosineEmbeddingLoss")                                         | [](https://docs.pytorch.org/docs/2.12/generated/torch.nn.CosineEmbeddingLoss.html#torch.nn.CosineEmbeddingLoss "torch.nn.CosineEmbeddingLoss")Создаёт критерий, измеряющий потерю по входным тензорам x1, x2 и тензору метки y со значениями 1 или -1.                                                                                                                                  |
+| [`nn.MultiMarginLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.MultiMarginLoss.html#torch.nn.MultiMarginLoss "torch.nn.MultiMarginLoss")                                                         | [](https://docs.pytorch.org/docs/2.12/generated/torch.nn.MultiMarginLoss.html#torch.nn.MultiMarginLoss "torch.nn.MultiMarginLoss")Создаёт критерий, оптимизирующий hinge-потерю (с отступом) для многоклассовой классификации между входом x (2D мини-батч тензор) и выходом y (1D тензор индексов целевых классов, 0≤y≤x.size(1)−1).                                                   |
+| [`nn.TripletMarginLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.TripletMarginLoss.html#torch.nn.TripletMarginLoss "torch.nn.TripletMarginLoss")                                                 | [](https://docs.pytorch.org/docs/2.12/generated/torch.nn.TripletMarginLoss.html#torch.nn.TripletMarginLoss "torch.nn.TripletMarginLoss")Создаёт критерий, измеряющий triplet-потерю по входным тензорам x1, x2, x3 и отступу (margin) со значением больше 0.                                                                                                                            |
+| [`nn.TripletMarginWithDistanceLoss`](https://docs.pytorch.org/docs/2.12/generated/torch.nn.TripletMarginWithDistanceLoss.html#torch.nn.TripletMarginWithDistanceLoss "torch.nn.TripletMarginWithDistanceLoss") | Создаёт критерий, измеряющий triplet-потерю по входным тензорам a, p и n (представляющим якорь (anchor), позитивный и негативный примеры соответственно), и неотрицательной вещественной функции ("функции расстояния"), используемой для вычисления соотношения между якорем и позитивным примером ("позитивное расстояние") и якорем и негативным примером ("негативное расстояние"). |
+
+
+
 $\hat{y}_i$ - это предсказание сети 
 $y_i$ - это правильный ответ 
 это все функции потер в Pytorch, но для себя я выделю парочку:
+## Что такое логиты (logits)
 
-### 1. `nn.MSELoss`
+**Логиты** - это сырой, необработанный выход последнего слоя сети (обычно `nn.Linear`), **до** применения Sigmoid или Softmax.
+
+> Логит - это просто число (или набор чисел), которое модель посчитала, но которое ещё **не превращено в вероятность**.
+
+Диапазон логитов - любое число: и отрицательное, и положительное, и сколь угодно большое по модулю (-100, -2.5, 0, 7.3, 50 - всё подходит).
+
+Python
+
+```Python
+x = self.linear2(x)
+return x  # это и есть логиты - дальше НЕ применяем Sigmoid/Softmax внутри forward
+```
+
+**Зачем оставлять именно логиты, а не сразу вероятность:**
+
+- `nn.BCEWithLogitsLoss` и `nn.CrossEntropyLoss` ждут на входе именно логиты - они сами применяют Sigmoid/Softmax внутри себя
+- это сделано для **численной стабильности** (объединённая формула избегает вычисления `log(0)`, которое дало бы `NaN`)
+- если применить Sigmoid/Softmax вручную в `forward()`, а потом ещё раз - внутри loss-функции, активация применится **два раза**, и обучение сломается
+
+**Где логиты превращают в реальную вероятность (только при инференсе/оценке):**
+
+Python
+
+```Python
+model.eval()
+with torch.no_grad():
+    logits = model(x)                    # сырые числа
+    probs = torch.softmax(logits, dim=1)  # теперь вероятности, сумма = 1
+    pred = torch.argmax(probs, dim=1)     # выбираем класс с макс. вероятностью
+```
+
+### 1. `nn.MSELoss` - Mean Squared Error
 **Для:** регрессии.
 
 Когда нужно предсказывать число:
